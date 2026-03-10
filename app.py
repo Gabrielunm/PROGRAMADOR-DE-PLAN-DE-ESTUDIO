@@ -63,12 +63,6 @@ with st.sidebar:
                     @gabriel96hq
                 </a>
             </div>
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <span style="font-size: 1.2em;">🌐</span>
-                <span style="color: #007bff; font-weight: bold;">
-                    agentia.ar
-                </span>
-            </div>
         </div>
         <p style="margin-top: 15px; margin-bottom: 0px; font-weight: bold; font-size: 1.1em;">Gabriel Quiroga</p>
         <p style="margin-top: 0px; color: #666; font-style: italic;">Desarrollador de Software, Auditor y Analista de Datos</p>
@@ -89,7 +83,8 @@ st.info("""
 5. Sube ese archivo aquí abajo.
 """)
 
-st.image("assets/instruction_excel.png", caption="Busca el botón de descarga en el menú Plan de Estudios")
+with st.expander("🖼️ Ver captura de referencia"):
+    st.image("assets/instruction_excel.png", caption="Busca el botón de descarga en el menú Plan de Estudios")
 
 uploaded_file = st.file_uploader("Sube tu Plan de Estudios (PDF)", type=["pdf"])
 
