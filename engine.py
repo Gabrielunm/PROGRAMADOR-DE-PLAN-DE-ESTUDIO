@@ -163,120 +163,89 @@ class AcademicEngine:
             self.reqs_por_materia[dest].append(req)
 
     def process_student_excel(self, file_content):
-        """Procesa el contenido del archivo subido (BytesIO)."""
-        df = None
-        
-        # Intento 1: Excel estándar en memoria
+        """Procesa el contenido del archivo subido (BytesIO) usando una estrategia híbrida."""
+        df_html = None
+        estados_alumno = {}
+
+        # 1. Intento 1: Excel estándar en memoria (Pandas nativo)
         try:
-            df = pd.read_excel(io.BytesIO(file_content))
+            df_html = pd.read_excel(io.BytesIO(file_content))
+            if df_html is not None:
+                for _, row in df_html.iterrows():
+                    row_str = ' '.join(str(x) for x in row if pd.notna(x)).strip()
+                    self._parse_row_to_status(row_str, estados_alumno)
         except Exception:
             pass
 
-        # Intento 2: Reparación nativa con Excel (Win32com) - Específico para SIU Guaraní corrupto
-        if df is None:
-            try:
-                import win32com.client as win32  # type: ignore
-                import tempfile
-                import os
-                import pythoncom  # type: ignore
-                
-                # Inicializar COM para soporte de multi-threading (necesario en Streamlit)
-                pythoncom.CoInitialize()
-                
-                # Guardar el contenido en un archivo temporal .xls
-                fd, temp_xls = tempfile.mkstemp(suffix='.xls')
-                with os.fdopen(fd, 'wb') as f:
-                    f.write(file_content)
-                
-                temp_xlsx = temp_xls + 'x'
-                
-                # Invocar Excel nativo para reparar y re-guardar
-                excel = win32.Dispatch('Excel.Application')
-                excel.Visible = False
-                excel.DisplayAlerts = False
+        # 2. Intento 2: HTML Encubierto (SIU Guaraní común)
+        # Probamos con varios motores (lxml es el más robusto)
+        try:
+            for enc in ['utf-8', 'latin-1', 'utf-16']:
                 try:
-                    wb = excel.Workbooks.Open(temp_xls)
-                    wb.SaveAs(temp_xlsx, FileFormat=51) # 51 = xlsx format
-                    wb.Close()
-                finally:
-                    excel.Quit()
-                
-                # Leer el archivo ya reparado
-                df = pd.read_excel(temp_xlsx)
-                
-                # Limpieza
-                if os.path.exists(temp_xls): os.remove(temp_xls)
-                if os.path.exists(temp_xlsx): os.remove(temp_xlsx)
-            except Exception as e_com:
-                print(f"Error en Win32com fallback: {e_com}")
-        
-        # Intento 3: HTML Encubierto
-        if df is None:
-            try:
-                # Intentar utf-8, si falla intentar latin-1 (muy común en SIU Guaraní)
-                try:
-                    html_str = file_content.decode('utf-8')
-                except UnicodeDecodeError:
-                    html_str = file_content.decode('latin-1', errors='ignore')
-
-                dfs = pd.read_html(io.StringIO(html_str))
-                if dfs: 
-                    # Concatenar TODAS las tablas encontradas, no solo dfs[0]
-                    # Aquí estaban las materias que faltaban en Linux
-                    df = pd.concat(dfs, ignore_index=True)
-            except Exception:
-                pass
-
-        estados_alumno = {}
-        
-        # 1. Búsqueda estructurada (Si hubo éxito con pandas)
-        all_text = ""
-        if df is not None:
-            for _, row in df.iterrows():
-                row_str = ' '.join(str(x) for x in row if pd.notna(x)).strip()
-                # El SIU a veces exporta '(1011)' o simplemente el número como ID.
-                self._parse_row_to_status(row_str, estados_alumno)
-                all_text += " " + row_str
-        
-        # 2. Extracción Binaria Extrema de Respaldo
-        if not estados_alumno:
-            for enc in ['utf-16le', 'latin-1']:
-                try:
-                    raw_text = file_content.decode(enc, errors='ignore')
-                    clean_text = "".join([c if (c.isalnum() or c in "()/- ,.;") else " " for c in raw_text])
-                    all_text += " [SEP] " + re.sub(r'\s+', ' ', clean_text)
+                    html_str = file_content.decode(enc)
+                    # Forzar lxml si está disponible, sino bs4
+                    dfs = pd.read_html(io.StringIO(html_str), flavor=['lxml', 'html5lib', 'bs4'])
+                    if dfs:
+                        df_merged = pd.concat(dfs, ignore_index=True)
+                        for _, row in df_merged.iterrows():
+                            row_str = ' '.join(str(x) for x in row if pd.notna(x)).strip()
+                            self._parse_row_to_status(row_str, estados_alumno)
+                        break # Si tuvo éxito con un encoding, paramos
                 except Exception:
                     continue
-            
-            matches = re.finditer(r'\((\d{4})\)|\b(\d{4})\b', all_text)
-            for m in matches:
-                codigo = m.group(1) if m.group(1) else m.group(2)
-                contexto = all_text[max(0, m.start()-50):min(len(all_text), m.start()+200)]
-                self._parse_row_to_status(codigo + " " + contexto, estados_alumno)
+        except Exception:
+            pass
 
-        return estados_alumno, None if estados_alumno else "No se pudo extraer ningún estado. El archivo parece no contener datos académicos válidos."
+        # 3. Intento 3: Escaneo Binario/Regex Agresivo (Salvavidas para Linux)
+        # Este método busca códigos de materia en el texto crudo sin importar la estructura
+        all_text = ""
+        for enc in ['utf-8', 'latin-1', 'utf-16le', 'utf-16be']:
+            try:
+                raw_text = file_content.decode(enc, errors='ignore')
+                # Limpieza agresiva pero conservando lo necesario
+                clean_text = "".join([c if (c.isalnum() or c in "()/- ,.;") else " " for c in raw_text])
+                all_text += " [SEP] " + re.sub(r'\s+', ' ', clean_text)
+            except Exception:
+                continue
+        
+        # Buscar patrones de códigos y contextos cercanos
+        # SIU: (1011) o 1011
+        matches = re.finditer(r'\((\d{4})\)|(?<!\d)(\d{4})(?!\d)', all_text)
+        for m in matches:
+            codigo = m.group(1) if m.group(1) else m.group(2)
+            # Tomar 100 caracteres antes y después para detectar el estado
+            contexto = all_text[max(0, m.start()-80):min(len(all_text), m.start()+150)]
+            self._parse_row_to_status(codigo + " " + contexto, estados_alumno)
+
+        return estados_alumno, None if estados_alumno else "No se pudo extraer ningún estado. El archivo parece no contener datos académicos válidos o el formato no es soportado."
 
     def _parse_row_to_status(self, row_str, estados_dict):
-        """Identifica código y estado en contexto."""
+        """Identifica código y estado en contexto usando keywords expandidas."""
         # Buscar el primer código de 4 dígitos
-        match_cod = re.search(r'\((\d{4})\)|\b(\d{4})\b', row_str)
+        match_cod = re.search(r'\((\d{4})\)|(?<!\d)(\d{4})(?!\d)', row_str)
         if not match_cod: return
         codigo = match_cod.group(1) if match_cod.group(1) else match_cod.group(2)
         
-        # Limpieza de estados (sacar espacios para detectar coincidencias parciales)
         row_clean = row_str.upper()
         estado = None
-        if any(s in row_clean for s in ['APROBADO', 'PROMOCION', 'EXAMEN', 'EQUIVALENCIA', 'APROBADA']):
+        
+        # Keywords expandidas para máxima detección
+        aprobado_keys = ['APROBADO', 'PROMOCION', 'PROMOCI N', 'PROMOC.', 'EXAMEN', 'EQUIVALENCIA', 'EQUIV.', 'APROBADA', 'APROB.']
+        regular_keys = ['REGULAR', 'CURSADA', 'REGULARE', 'REGUL.']
+        abandono_keys = ['ABANDONO', 'ABANDONADA']
+        
+        if any(s in row_clean for s in aprobado_keys):
             estado = 'Aprobado'
-        elif any(s in row_clean for s in ['ABANDONO', 'ABANDONADA', 'APLAZADA POR ABANDONO']):
+        elif any(s in row_clean for s in abandono_keys):
             estado = 'Aplazada por Abandono'
-        elif any(s in row_clean for s in ['REGULAR', 'CURSADA']):
+        elif any(s in row_clean for s in regular_keys):
+            # El usuario prefiere tratar Regular como final pendiente (igual a libre)
             estado = 'Regular'
         elif 'LIBRE' in row_clean:
             estado = 'Voy a darla libre'
 
         if estado:
-            # Mapeo especial
+            # Mapeo especial para códigos genéricos de la UNM
             codigo_a_buscar = codigo
             if codigo in ['1161', '1261', '1361', '1461']: codigo_a_buscar = 'IDIOMA_NIVEL_1'
             elif codigo in ['1162', '1262', '1362', '1462']: codigo_a_buscar = 'IDIOMA_NIVEL_2'
@@ -285,8 +254,15 @@ class AcademicEngine:
             m_row = self.materias_df[self.materias_df['codigo'] == codigo_a_buscar]
             if not m_row.empty:
                 id_m = int(m_row.iloc[0]['id_materia'])
-                if id_m not in estados_dict or (estado == 'Aprobado' and estados_dict[id_m] != 'Aprobado'):
+                # Lógica de prioridad: Aprobado > Regular > Libre
+                if id_m not in estados_dict:
                     estados_dict[id_m] = estado
+                else:
+                    estado_ant = estados_dict[id_m]
+                    if estado == 'Aprobado' and estado_ant != 'Aprobado':
+                        estados_dict[id_m] = estado
+                    elif estado == 'Regular' and estado_ant not in ['Aprobado', 'Regular']:
+                        estados_dict[id_m] = estado
 
     def get_proyected_plan(self, estados_iniciales, disponibilidad, max_materias=3, strategy="Intensivo", max_dias=6, max_libres=1):
         """
