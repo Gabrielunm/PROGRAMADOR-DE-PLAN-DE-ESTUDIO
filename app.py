@@ -65,7 +65,7 @@ with st.sidebar:
             </div>
         </div>
         <p style="margin-top: 15px; margin-bottom: 0px; font-weight: bold; font-size: 1.1em;">Gabriel Quiroga</p>
-        <p style="margin-top: 0px; color: #666; font-style: italic;">Desarrollador de Software, Auditor y Analista de Datos</p>
+        <p style="margin-top: 0px; color: #666; font-style: italic;">Desarrollador de Software y Analista de Datos</p>
         """,
         unsafe_allow_html=True
     )
