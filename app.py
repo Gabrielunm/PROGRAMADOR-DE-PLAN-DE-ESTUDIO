@@ -201,51 +201,7 @@ else:
             if not proyeccion:
                 st.success("🎉 ¡Felicidades! Según el análisis, ya has completado todas las materias o no hay oferta compatible disponible.")
             else:
-                # Botón de impresión
-                col_print, col_spacer = st.columns([1, 5])
-                with col_print:
-                    if st.button("🖨️ Imprimir Plan", use_container_width=True):
-                        # Generar contenido imprimible
-                        html_content = "<html><head><meta charset='utf-8'><style>"
-                        html_content += "body { font-family: Arial, sans-serif; margin: 20px; }"
-                        html_content += "h1 { color: #1a1a1a; text-align: center; }"
-                        html_content += "h2 { color: #333; border-bottom: 2px solid #007bff; padding-bottom: 5px; margin-top: 20px; }"
-                        html_content += "table { width: 100%; border-collapse: collapse; margin: 15px 0; }"
-                        html_content += "th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }"
-                        html_content += "th { background-color: #007bff; color: white; }"
-                        html_content += ".code { font-weight: bold; }"
-                        html_content += ".docente { font-style: italic; font-size: 0.9em; }"
-                        html_content += ".horarios { color: #666; }"
-                        html_content += ".libre { background-color: #fff3cd; }"
-                        html_content += "</style></head><body>"
-                        html_content += "<h1>Plan de Cursada - Proyección</h1>"
-                        
-                        for cuat in proyeccion:
-                            html_content += f"<h2>{cuat['ciclo']}</h2>"
-                            html_content += "<table><tr><th>Código</th><th>Materia</th><th>Docente</th><th>Horarios</th><th>Comisión</th></tr>"
-                            
-                            for m in cuat['materias']:
-                                es_libre = "Materia de libre" in m['horarios']
-                                row_class = ' class="libre"' if es_libre else ''
-                                html_content += f"<tr{row_class}>"
-                                html_content += f"<td class='code'>{m['codigo']}</td>"
-                                html_content += f"<td>{m['nombre']}</td>"
-                                html_content += f"<td class='docente'>{m['docente']}</td>"
-                                html_content += f"<td class='horarios'>{m['horarios']}</td>"
-                                html_content += f"<td>{m['comision']}</td>"
-                                html_content += "</tr>"
-                            
-                            html_content += "</table>"
-                        
-                        html_content += "</body></html>"
-                        
-                        # Crear un iframe para imprimir
-                        st.markdown(
-                            f"""
-                            <iframe srcdoc="{html_content.replace('"', '&quot;')}" style="width:100%; height:600px; border:none;"></iframe>
-                            """,
-                            unsafe_allow_html=True
-                        )
+                # El usuario prefiere imprimir directamente desde el navegador, así que quitamos el botón custom
                 
                 for cuat in proyeccion:
                     st.subheader(f"📅 {cuat['ciclo']}")
