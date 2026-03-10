@@ -39,6 +39,7 @@ scripts/
 # Database
 *.sqlite
 *.db
+!plan_estudios.sqlite
 
 # Data & Temp
 *.xlsx
