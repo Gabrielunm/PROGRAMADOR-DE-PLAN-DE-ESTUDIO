@@ -6,13 +6,10 @@ import copy
 
 st.set_page_config(page_title="UNM - Programador Académico", layout="wide", page_icon="🎓")
 
-# Design & Styles
+# Design & Styles - Usando elementos nativos para compatibilidad con temas (Claro/Oscuro)
 st.markdown("""
 <style>
-    .main { background-color: #f8f9fa; }
     .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #007bff; color: white; }
-    .stMetric { background-color: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    h1, h2, h3 { color: #1a1a1a; }
 </style>
 """, unsafe_allow_html=True)
 

@@ -211,10 +211,16 @@ class AcademicEngine:
             if not codigo:
                 # Modificado para capturar variantes de PDF con slash, ej: 1461/I, 1463/A
                 match_cod = re.search(r'\(?(\d{4}(?:/[A-Z])?)\)?|(?<!\d)(\d{4})(?:[/-]\d+)?(?!\d)', row_str)
-                if not match_cod: return
-                codigo_raw = match_cod.group(1) if match_cod.group(1) else match_cod.group(2)
-                # Si tiene slash, tomamos la base numérica
-                codigo = codigo_raw.split('/')[0] if '/' in codigo_raw else codigo_raw
+                if match_cod:
+                    codigo_raw = match_cod.group(1) if match_cod.group(1) else match_cod.group(2)
+                    # Si tiene slash, tomamos la base numérica
+                    codigo = codigo_raw.split('/')[0] if '/' in codigo_raw else codigo_raw
+                
+                # FALLBACK por NOMBRE para materia 1446 (Problema de nombres inconsistentes)
+                elif "ECONOMIA SOCIAL" in row_str.upper() or "EC. SOC." in row_str.upper():
+                    codigo = "1446"
+                
+                if not codigo: return
             
             # Mapeo especial para códigos genéricos de la UNM
             codigo_a_buscar = codigo
