@@ -121,7 +121,7 @@ else:
             st.markdown("---")
         
         # Crear tabs
-        tab_config, tab_audit, tab_ruta = st.tabs(["⚙️ Configuración", "📋 Auditoría Actual", "🚀 Hoja de Ruta Sugerida"])
+        tab_config, tab_audit, tab_ruta = st.tabs(["⚙️ Configuración", "📋 Situación Actual", "🚀 Hoja de Ruta Sugerida"])
         
         # ========== TAB: CONFIGURACIÓN ==========
         with tab_config:
@@ -186,58 +186,49 @@ else:
                    "📝 _Las materias en 'Voy a darla libre' se excluyen de los límites de materias y días_")
             
             # Mostrar tabla de materias agrupadas por ciclo
-            # Agrupar materias por ciclo
-            ciclos = sorted(set(engine.materias_df[engine.materias_df['id_materia'].isin(estados_alumno.keys())]['id_ciclo'].tolist()))
+            # Obtenemos TODOS los ciclos definidos en la base de datos
             ciclo_nombres = {1: "Ciclo Común", 2: "Tecnicatura / Grado Profesional", 3: "Idiomas", 4: "Optativas"}
             
-            for ciclo_id in ciclos:
-                label = ciclo_nombres.get(ciclo_id, f"Ciclo {ciclo_id}")
+            for ciclo_id in sorted(ciclo_nombres.keys()):
+                label = ciclo_nombres[ciclo_id]
                 st.subheader(f"📌 {label}")
                 
-                mats_ciclo = engine.materias_df[
-                    (engine.materias_df['id_ciclo'] == ciclo_id) & 
-                    (engine.materias_df['id_materia'].isin(estados_alumno.keys()))
-                ]
+                # Mostramos TODAS las materias de este ciclo que están en la base de datos
+                mats_ciclo = engine.materias_df[engine.materias_df['id_id_ciclo'] == ciclo_id] if 'id_id_ciclo' in engine.materias_df.columns else engine.materias_df[engine.materias_df['id_ciclo'] == ciclo_id]
                 
                 for _, m in mats_ciclo.iterrows():
                     id_m = m['id_materia']
-                    estado_original = estados_alumno.get(id_m, "No cursada") # Use estados_alumno as original for comparison
                     
-                    # Usar estado modificado si existe
+                    # El estado original es lo que vino del PDF o 'No cursada' por defecto
+                    estado_original = estados_alumno.get(id_m, "No cursada")
+                    
+                    # El estado actual es lo que el usuario haya movido en el selectbox (si existe en st.session_state)
                     estado_actual = st.session_state.estados_modificados.get(id_m, estado_original)
                     
-                    # Crear columnas: código, materia, selector estado
-                    col_cod, col_mat, col_est = st.columns([0.8, 3, 2.5])
-                    
-                    # ===== COLUMNA 1: CÓDIGO =====
-                    col_cod.write(f"**{m['codigo']}**")
-                    
-                    # ===== COLUMNA 2: NOMBRE DE MATERIA =====
-                    col_mat.write(m['nombre'])
-                    
-                    # ===== COLUMNA 3: SELECTOR DE ESTADO =====
-                    opciones_estado = ["Aprobado", "Regular", "Voy a darla libre", "No cursada", "Aplazada por Abandono"]
-                    
-                    estado_nuevo = col_est.selectbox(
-                        "Estado",
-                        options=opciones_estado,
-                        index=opciones_estado.index(estado_actual) if estado_actual in opciones_estado else opciones_estado.index("No cursada"),
-                        key=f"estado_{id_m}",
-                        label_visibility="collapsed"
-                    )
-                    
-                    # Guardar cambio en session_state
-                    if estado_nuevo != estado_original:
-                        st.session_state.estados_modificados[id_m] = estado_nuevo
-                        estado_actual = estado_nuevo
-                    else:
-                        # Si vuelve al original, limpiar del session_state
-                        if id_m in st.session_state.estados_modificados:
-                            del st.session_state.estados_modificados[id_m]
-                        estado_actual = estado_original
-                    
-                    # Actualizar estados_alumno para que se use en la proyección
-                    estados_alumno[id_m] = estado_actual
+                    with st.container():
+                        col_cod, col_mat, col_est = st.columns([0.8, 3, 2.5])
+                        col_cod.write(f"**{m['codigo']}**")
+                        col_mat.write(m['nombre'])
+                        
+                        opciones_estado = ["Aprobado", "Regular", "Voy a darla libre", "No cursada", "Aplazada por Abandono"]
+                        
+                        estado_nuevo = col_est.selectbox(
+                            "Estado",
+                            options=opciones_estado,
+                            index=opciones_estado.index(estado_actual) if estado_actual in opciones_estado else opciones_estado.index("No cursada"),
+                            key=f"estado_{id_m}",
+                            label_visibility="collapsed"
+                        )
+                        
+                        if estado_nuevo != estado_original:
+                            st.session_state.estados_modificados[id_m] = estado_nuevo
+                            estado_actual = estado_nuevo
+                        else:
+                            if id_m in st.session_state.estados_modificados:
+                                del st.session_state.estados_modificados[id_m]
+                            estado_actual = estado_original
+                        
+                        estados_alumno[id_m] = estado_actual
                 st.divider()
         
         # ========== TAB: HOJA DE RUTA ==========
