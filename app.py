@@ -88,6 +88,23 @@ else:
         for id_m, estado in st.session_state.estados_modificados.items():
             estados_alumno[id_m] = estado
         
+        # --- ESTADÍSTICAS EN SIDEBAR ---
+        total_materias = len(engine.materias_df)
+        aprobadas = sum(1 for e in estados_alumno.values() if e == "Aprobado")
+        regulares = sum(1 for e in estados_alumno.values() if e == "Regular")
+        porcentaje = (aprobadas / total_materias) * 100 if total_materias > 0 else 0
+        
+        with st.sidebar:
+            st.markdown("### 📊 Tu Progreso")
+            st.sidebar.progress(porcentaje / 100)
+            
+            c1, c2 = st.sidebar.columns(2)
+            c1.metric("Avance", f"{porcentaje:.1f}%")
+            c2.metric("Aprobadas", f"{aprobadas}/{total_materias}")
+            
+            st.sidebar.metric("Finales Pendientes (Regulares)", regulares)
+            st.markdown("---")
+        
         # Crear tabs
         tab_config, tab_audit, tab_ruta = st.tabs(["⚙️ Configuración", "📋 Auditoría Actual", "🚀 Hoja de Ruta Sugerida"])
         
