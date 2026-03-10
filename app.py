@@ -67,14 +67,14 @@ with st.expander("ℹ️ ¿Cómo descargar mi archivo desde el SIU?", expanded=F
     2. Inicia sesión con tu usuario y contraseña.
     3. Dirígete a la sección **Reportes** en el menú superior.
     4. Selecciona **Plan de Estudio**.
-    5. Haz clic en el botón de **Descarga de Excel** (icono de Excel en la parte superior derecha de la tabla).
+    5. Haz clic en el botón de **Descarga de PDF** (icono de PDF en la parte superior derecha de la tabla).
     """)
-    st.image("assets/instruction_excel.png", caption="Referencia: Botón de descarga en el SIU-Guaraní")
+    st.image("assets/instruction_excel.png", caption="Referencia: Botones de descarga en el SIU-Guaraní")
 
-uploaded_file = st.file_uploader("Subir plan_estudios.xls", type=["xls", "xlsx"])
+uploaded_file = st.file_uploader("Subir plan_estudios.pdf", type=["pdf"])
 
 if not uploaded_file:
-    st.warning("⚠️ Por favor, sube tu archivo `plan_estudios.xls` extraído del SIU para comenzar.")
+    st.warning("⚠️ Por favor, sube tu archivo `plan_estudios.pdf` extraído del SIU para comenzar.")
     st.info("💡 Este MVP procesará tus correlativas y proyectará los próximos cuatrimestres basándose en la oferta académica real de la UNM.")
 else:
     # Procesar archivo

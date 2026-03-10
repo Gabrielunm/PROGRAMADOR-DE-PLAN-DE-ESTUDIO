@@ -6,6 +6,15 @@ import json
 import unicodedata
 import os
 import platform # Para detectar si es Windows o Linux
+import warnings
+import traceback
+
+try:
+    import pdfplumber
+except ImportError:
+    pdfplumber = None
+except ImportError:
+    pdfplumber = None
 
 DB_NAME = 'plan_estudios.sqlite'
 
@@ -26,7 +35,7 @@ class AcademicEngine:
         """
         # aplicar normalización unicode
         txt = unicodedata.normalize('NFKD', horario_str or '')
-        # eliminar caracteres que no se pueden representar en ascii (incluye �)
+        # eliminar caracteres que no se pueden representar en ascii (incluye )
         txt = txt.encode('ascii', 'ignore').decode('ascii')
         # mayúsculas y limpieza de espacios
         txt = txt.upper()
@@ -164,127 +173,48 @@ class AcademicEngine:
                 self.reqs_por_materia[dest] = []
             self.reqs_por_materia[dest].append(req)
 
-    def process_student_excel(self, file_content):
-        """Procesa el contenido del archivo subido (BytesIO) usando una estrategia híbrida."""
-        df_html = None
+    def process_student_excel(self, file_content, file_name=""):
+        """
+        Extrae los estados de las materias desde el archivo del alumno (Formato PDF crudo).
+        Retorna un dict: {id_materia: 'Estado'} y un mensaje de error (o None).
+        El file_content debe ser un objeto en bytes.
+        """
+        
         estados_alumno = {}
-
-        # 1. Intento 1: Excel estándar (Pandas nativo)
+        
+        if pdfplumber is None:
+            return None, "Librería pdfplumber no está instalada. Ejecute: pip install pdfplumber"
+            
         try:
-            dict_dfs = pd.read_excel(io.BytesIO(file_content), sheet_name=None)
-            for sheet_name, df in dict_dfs.items():
-                if df is not None:
-                    for _, row in df.iterrows():
-                        row_str = ' '.join(str(x) for x in row if pd.notna(x)).strip()
+            with pdfplumber.open(io.BytesIO(file_content)) as pdf:
+                for page in pdf.pages:
+                    text = page.extract_text()
+                    if not text: continue
+                    for row_str in text.split('\n'):
                         self._parse_row_to_status(row_str, estados_alumno)
-        except Exception:
-            pass
-
-        # 2. Intento 2: Reparación nativa con Excel (SOLO EN WINDOWS)
-        # Esto soluciona los archivos "corruptos" del SIU que Windows sí puede abrir.
-        if not estados_alumno and platform.system() == 'Windows':
-            try:
-                import win32com.client as win32 # type: ignore
-                import tempfile
-                import pythoncom # type: ignore
-                
-                pythoncom.CoInitialize()
-                fd, temp_xls = tempfile.mkstemp(suffix='.xls')
-                with os.fdopen(fd, 'wb') as f:
-                    f.write(file_content)
-                temp_xlsx = temp_xls + 'x'
-                
-                excel = win32.Dispatch('Excel.Application')
-                excel.Visible = False
-                excel.DisplayAlerts = False
-                try:
-                    wb = excel.Workbooks.Open(temp_xls)
-                    wb.SaveAs(temp_xlsx, FileFormat=51) 
-                    wb.Close()
-                    df_fixed = pd.read_excel(temp_xlsx)
-                    for _, row in df_fixed.iterrows():
-                        row_str = ' '.join(str(x) for x in row if pd.notna(x)).strip()
-                        self._parse_row_to_status(row_str, estados_alumno)
-                finally:
-                    excel.Quit()
-                
-                if os.path.exists(temp_xls): os.remove(temp_xls)
-                if os.path.exists(temp_xlsx): os.remove(temp_xlsx)
-            except Exception:
-                pass
-
-        # 3. Intento 3: HTML Encubierto / Scraping Interno (A prueba de balas)
-        # Probamos con BeautifulSoup para limpiar HTML mal formado antes de que lo lea Pandas.
-        if not estados_alumno:
-            try:
-                from bs4 import BeautifulSoup
-                for enc in ['latin-1', 'utf-8', 'utf-16']:
-                    try:
-                        raw_text = file_content.decode(enc, errors='ignore')
-                        # Solo procedemos si parece haber algo de HTML
-                        if '<table' in raw_text.lower():
-                            # BeautifulSoup ayuda a cerrar etiquetas rotas y limpiar "basura" binaria
-                            soup = BeautifulSoup(raw_text, "lxml") 
-                            dfs = pd.read_html(io.StringIO(str(soup)), flavor=['lxml', 'html5lib', 'bs4'])
-                            if dfs:
-                                for df in dfs:
-                                    if df is not None:
-                                        for _, row in df.iterrows():
-                                            row_str = ' '.join(str(x) for x in row if pd.notna(x)).strip()
-                                            self._parse_row_to_status(row_str, estados_alumno)
-                                if len(estados_alumno) > 5: break
-                    except Exception:
-                        continue
-            except Exception:
-                pass
-
-        # 4. Intento 4: Escaneo Binario/Regex Agresivo (Salvavidas para Linux)
-        # Si no recuperamos suficientes materias (umbral de seguridad), usamos fuerza bruta binaria.
-        if len(estados_alumno) < 15: 
-            all_text_fallback = ""
-            # latin-1 es el encoding más común para archivos binarios de sistemas viejos en Argentina
-            for enc in ['latin-1', 'utf-16le', 'utf-8']:
-                try:
-                    raw_text = file_content.decode(enc, errors='ignore')
-                    # No colapsar espacios aún para visualizar la estructura original del binario
-                    clean_text = "".join([c if (c.isalnum() or c in "()/- ,.;") else " " for c in raw_text])
-                    all_text_fallback += " [SEP] " + clean_text
-                except Exception:
-                    continue
             
-            all_text_fallback_up = all_text_fallback.upper()
-            
-            # A. Buscar por CÓDIGOS (Contexto muy amplio para archivos dispersos)
-            matches_cod = re.finditer(r'\((\d{4})\)|(?<!\d)(\d{4})(?:[/-]\d+)?(?!\d)', all_text_fallback)
-            for m in matches_cod:
-                codigo = m.group(1) if m.group(1) else m.group(2)
-                # Ventana de 500 caracteres para atrapar el estado incluso en archivos corruptos
-                contexto = all_text_fallback[max(0, m.start()-50):min(len(all_text_fallback), m.start()+450)]
-                self._parse_row_to_status(contexto, estados_alumno)
+            # Si encontró materias, retornamos éxito.
+            if len(estados_alumno) > 10:
+                return estados_alumno, None
+            else:
+                return estados_alumno, "El PDF se leyó pero se encontraron pocas materias. Compruebe asegurar que es el 'Plan de Estudios'."
+        except Exception as e:
+            return None, f"Error al procesar el archivo PDF: {e}. Asegúrese de subir un archivo PDF válido descargado del SIU."
 
-            # B. Buscar por NOMBRES (Eficaz cuando el código está mal guardado)
-            for _, row_m in self.materias_df.iterrows():
-                nombre_m = row_m['nombre'].upper()
-                if len(nombre_m) > 12: # Evitar nombres genéricos cortos
-                    start_search = 0
-                    while True:
-                        idx = all_text_fallback_up.find(nombre_m, start_search)
-                        if idx == -1: break
-                        contexto = all_text_fallback[max(0, idx-20):min(len(all_text_fallback), idx+500)]
-                        self._parse_row_to_status(contexto, estados_alumno, id_m_hint=int(row_m['id_materia']))
-                        start_search = idx + 1
-
-        return estados_alumno, None if estados_alumno else "No se pudo extraer ningún estado. El archivo parece no contener datos académicos válidos o el formato no es soportado."
-
-    def _parse_row_to_status(self, row_str, estados_dict, id_m_hint=None):
+    def _parse_row_to_status(self, row_str, estados_dict, id_m_hint=None, code_hint=None):
         """Identifica código/nombre y estado con prioridad absoluta para 'Aprobado'."""
         id_m = id_m_hint
         
         if id_m is None:
-            # Buscar el código en el string proporcionado
-            match_cod = re.search(r'\((\d{4})\)|(?<!\d)(\d{4})(?!\d)', row_str)
-            if not match_cod: return
-            codigo = match_cod.group(1) if match_cod.group(1) else match_cod.group(2)
+            # Buscar el código en el string proporcionado (ahora más flexible)
+            codigo = code_hint
+            if not codigo:
+                # Modificado para capturar variantes de PDF con slash, ej: 1461/I, 1463/A
+                match_cod = re.search(r'\(?(\d{4}(?:/[A-Z])?)\)?|(?<!\d)(\d{4})(?:[/-]\d+)?(?!\d)', row_str)
+                if not match_cod: return
+                codigo_raw = match_cod.group(1) if match_cod.group(1) else match_cod.group(2)
+                # Si tiene slash, tomamos la base numérica
+                codigo = codigo_raw.split('/')[0] if '/' in codigo_raw else codigo_raw
             
             # Mapeo especial para códigos genéricos de la UNM
             codigo_a_buscar = codigo
@@ -300,7 +230,7 @@ class AcademicEngine:
         
         # PRIORIDAD INTERNA DE LA FILA
         aprobado_keys = ['APROBADO', 'PROMOCION', 'PROMOCI N', 'PROMOC.', 'EXAMEN', 'EQUIVALENCIA', 'EQUIV.', 'APROBADA', 'APROB.']
-        regular_keys = ['REGULAR', 'CURSADA', 'REGULARE', 'REGUL.']
+        regular_keys = ['REGULAR', 'CURSADA', 'REGULARE', 'REGUL.', 'VIGENTE', 'ACEPTADA', 'REGULARIDAD']
         
         estado_detectado = None
         if any(re.search(rf'\b{k}', row_clean) for k in aprobado_keys):
@@ -626,7 +556,6 @@ class AcademicEngine:
                             nombres_reqs = self.materias_df[self.materias_df['id_materia'].isin(faltan_reqs)]['codigo'].tolist()
                             nota_bloqueo = f"⚠️ Bloqueada por correlativas anteriores estancadas (requieren final o cursada): {', '.join(nombres_reqs)}"
                         else:
-                            # Buscar oferta disponible para esta materia
                             of_disp = self.oferta_df[self.oferta_df['id_materia'] == id_m_block]
                             if of_disp.empty:
                                 nota_bloqueo = "⚠️ Sin oferta académica en la base de datos."

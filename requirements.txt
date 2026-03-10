@@ -1,20 +1,13 @@
 # Core Dependencies
 pandas
 streamlit
-lxml
-html5lib
-
-# Data Processing & Database
-openpyxl
-xlrd
+pdfplumber>=0.11.0
 
 # Optimization
 ortools
 
 # Testing & Utilities
 requests
-beautifulsoup4
-
 
 # Standard library modules (already included with Python):
 # re, json, sqlite3, io, copy, unicodedata, datetime, urllib, sys, subprocess, os, time, typing
