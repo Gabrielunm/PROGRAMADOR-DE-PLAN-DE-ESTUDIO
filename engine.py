@@ -213,9 +213,17 @@ class AcademicEngine:
         # Intento 3: HTML Encubierto
         if df is None:
             try:
-                html_str = file_content.decode('utf-8', errors='ignore')
+                # Intentar utf-8, si falla intentar latin-1 (muy común en SIU Guaraní)
+                try:
+                    html_str = file_content.decode('utf-8')
+                except UnicodeDecodeError:
+                    html_str = file_content.decode('latin-1', errors='ignore')
+
                 dfs = pd.read_html(io.StringIO(html_str))
-                if dfs: df = dfs[0]
+                if dfs: 
+                    # Concatenar TODAS las tablas encontradas, no solo dfs[0]
+                    # Aquí estaban las materias que faltaban en Linux
+                    df = pd.concat(dfs, ignore_index=True)
             except Exception:
                 pass
 
