@@ -25,6 +25,13 @@ engine = get_engine()
 if 'estados_modificados' not in st.session_state:
     st.session_state.estados_modificados = {}
 
+if 'perfil_selector' not in st.session_state:
+    st.session_state.perfil_selector = "Equilibrado"
+    st.session_state.slider_mat = 3
+    st.session_state.slider_dia = 5
+    st.session_state.slider_lib = 1
+
+# Garantizar que slider_mat y dial_dia siempre existan (fallback)
 if 'slider_mat' not in st.session_state: st.session_state.slider_mat = 3
 if 'slider_dia' not in st.session_state: st.session_state.slider_dia = 5
 if 'slider_lib' not in st.session_state: st.session_state.slider_lib = 1
