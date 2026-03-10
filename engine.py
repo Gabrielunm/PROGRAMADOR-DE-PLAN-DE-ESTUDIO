@@ -132,7 +132,7 @@ class AcademicEngine:
         # Factor 2: Cuántas correlativas necesita (madurez)
         reqs = self.reqs_por_materia.get(materia_id, [])
         reqs_sin_hacer = sum(1 for r in reqs 
-                            if estados_actuales.get(r) not in ['Aprobado', 'Regular'])
+                            if estados_actuales.get(r) not in ['Aprobado', 'Regular', 'Voy a darla libre'])
         score -= reqs_sin_hacer * 30  # Penaliza si tiene muchos requisitos sin hacer
         
         # Factor 3: Disponibilidad futura (si hay pocas comisiones, es urgente)
@@ -322,8 +322,9 @@ class AcademicEngine:
         plan_proyectado = []
         estados_actuales = estados_iniciales.copy()
         
-        # Materias pendientes (no aprobadas ni regulares)
-        materias_restantes = self.materias_df[~self.materias_df['id_materia'].isin([k for k, v in estados_actuales.items() if v in ['Aprobado', 'Regular']])].copy()
+        # Materias pendientes (no aprobadas)
+        # Nota: 'Regular' y 'Voy a darla libre' se consideran PENDIENTES de rendir final/examen
+        materias_restantes = self.materias_df[~self.materias_df['id_materia'].isin([k for k, v in estados_actuales.items() if v == 'Aprobado'])].copy()
         
         # Calcular "Peso de Bloqueo"
         bloqueo_counts = self.correlativas_df['id_materia_requisito'].value_counts().to_dict()
@@ -363,7 +364,7 @@ class AcademicEngine:
                     continue
                 
                 reqs = self.reqs_por_materia.get(id_m, [])
-                if all(estados_actuales.get(r) in ['Aprobado', 'Regular'] for r in reqs):
+                if all(estados_actuales.get(r) in ['Aprobado', 'Regular', 'Voy a darla libre'] for r in reqs):
                     habilitadas.append(m)
 
             seleccionadas = []
@@ -371,22 +372,24 @@ class AcademicEngine:
             bloques_agendados_cuat = []
             
             for h in habilitadas:
-                # Separar materias en estado "Voy a darla libre"
+                # Separar materias en estado "Voy a darla libre" o "Regular" (pendientes de final)
                 id_m = h['id_materia']
-                if estados_actuales.get(id_m) == "Voy a darla libre":
+                if estados_actuales.get(id_m) in ["Voy a darla libre", "Regular"]:
                     # Limitar cantidad de libres por cuatrimestre
                     if len(seleccionadas_libres) < max_libres:
+                        estado_label = estados_actuales.get(id_m)
+                        nota_final = "📚 Rendirás final regular" if estado_label == "Regular" else "📚 Rendirás libre esta materia"
                         seleccionadas_libres.append({
                             'id_materia': h['id_materia'],
                             'codigo': h['codigo'],
                             'nombre': h['nombre'],
                             'comision': '-',
-                            'horarios': '(Materia de libre)',
+                            'horarios': f'({estado_label})',
                             'docente': '-',
-                            'nota': '📚 Rendirás libre esta materia'
+                            'nota': nota_final
                         })
-                        # Actualizar estado
-                        estados_actuales[id_m] = 'Voy a darla libre'
+                        # Actualizar estado a Aprobado tras "rendirla" en la proyección
+                        estados_actuales[id_m] = 'Aprobado'
                     continue
                 
                 # Resto de materias (que se agendarán)
@@ -585,7 +588,7 @@ class AcademicEngine:
                             nota_bloqueo = f"⚠️ Requiere 21 materias aprobadas (tienes {aprobadas_count})."
                         elif faltan_reqs:
                             nombres_reqs = self.materias_df[self.materias_df['id_materia'].isin(faltan_reqs)]['codigo'].tolist()
-                            nota_bloqueo = f"⚠️ Bloqueada por correlativas anteriores estancadas: {', '.join(nombres_reqs)}"
+                            nota_bloqueo = f"⚠️ Bloqueada por correlativas anteriores estancadas (requieren final o cursada): {', '.join(nombres_reqs)}"
                         else:
                             # Buscar oferta disponible para esta materia
                             of_disp = self.oferta_df[self.oferta_df['id_materia'] == id_m_block]
