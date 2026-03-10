@@ -65,13 +65,13 @@ with st.sidebar:
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: 1.2em;">🌐</span>
-                <a href="https://agentia.ar/nosotros" target="_blank" style="text-decoration: none; color: #007bff; font-weight: bold;">
+                <span style="color: #007bff; font-weight: bold;">
                     agentia.ar
-                </a>
+                </span>
             </div>
         </div>
         <p style="margin-top: 15px; margin-bottom: 0px; font-weight: bold; font-size: 1.1em;">Gabriel Quiroga</p>
-        <p style="margin-top: 0px; color: #666; font-style: italic;">Agentia Developer</p>
+        <p style="margin-top: 0px; color: #666; font-style: italic;">Desarrollador de Software, Auditor y Analista de Datos</p>
         """,
         unsafe_allow_html=True
     )
