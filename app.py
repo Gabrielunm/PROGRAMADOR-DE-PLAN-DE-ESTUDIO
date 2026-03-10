@@ -23,9 +23,22 @@ def get_engine():
 
 engine = get_engine()
 
-# Initialize session state for tracking estados_modificados
+# Initialize session state for tracking estados_modificados and UI profiles
 if 'estados_modificados' not in st.session_state:
     st.session_state.estados_modificados = {}
+
+if 'slider_mat' not in st.session_state: st.session_state.slider_mat = 3
+if 'slider_dia' not in st.session_state: st.session_state.slider_dia = 5
+if 'slider_lib' not in st.session_state: st.session_state.slider_lib = 1
+
+def update_profile():
+    p = st.session_state.perfil_selector
+    if p == "Estándar (Equilibrado)":
+        st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 3, 5, 1
+    elif p == "Intensivo (Fast-Track)":
+        st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 5, 6, 2
+    elif p == "Relajado (Trabajador)":
+        st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 2, 3, 0
 
 # --- PANEL PRINCIPAL ---
 st.title("🎓 Programador de Plan de Estudios - Contador Público")
@@ -39,8 +52,8 @@ with st.sidebar:
         <div style="display: flex; flex-direction: column; gap: 8px;">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" width="18" height="18">
-                <a href="https://www.instagram.com/gabriel96h1" target="_blank" style="text-decoration: none; color: #E1306C; font-weight: bold;">
-                    @gabriel96h1
+                <a href="https://www.instagram.com/gabriel96hq" target="_blank" style="text-decoration: none; color: #E1306C; font-weight: bold;">
+                    @gabriel96hq
                 </a>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -131,19 +144,25 @@ else:
             st.divider()
             st.subheader("📊 Límites de Proyección")
             
+            st.markdown("**1. Elige un perfil rápido:**")
+            st.radio("Perfil de Cursada", 
+                     ["Estándar (Equilibrado)", "Intensivo (Fast-Track)", "Relajado (Trabajador)", "Personalizado"], 
+                     key="perfil_selector", 
+                     on_change=update_profile, 
+                     horizontal=True,
+                     label_visibility="collapsed")
+            
+            st.markdown("<br>**2. Ajuste Fino (Opcional):**", unsafe_allow_html=True)
             col1, col2, col3 = st.columns(3)
             
             with col1:
-                max_materias = st.slider("Máximo de materias por cuatrimestre", 1, 5, 3,
-                                        help="El perfil respetará este límite como máximo")
+                max_materias = st.slider("Máximo de materias por cuatrimestre", 1, 5, help="El perfil respetará este límite como máximo", key="slider_mat")
             
             with col2:
-                max_dias = st.slider("Máximo de días con clases por semana", 1, 6, 5,
-                                    help="No se agendan clases en más días que lo indicado")
+                max_dias = st.slider("Máximo de días con clases por semana", 1, 6, help="No se agendan clases en más días que lo indicado", key="slider_dia")
             
             with col3:
-                max_libres = st.slider("Máximo de materias 'Voy a darla libre' por cuatrimestre", 0, 3, 1,
-                                      help="Materias que cursarás solo para rendir libre (no ocupan días ni límite de materias)")
+                max_libres = st.slider("Máximo de materias 'Voy a darla libre' por cuatrimestre", 0, 3, help="Materias que cursarás solo para rendir libre (no ocupan días ni límite de materias)", key="slider_lib")
             
             st.info("✅ Configuración lista. Diríjete a 'Auditoría Actual' o 'Hoja de Ruta Sugerida'")
         

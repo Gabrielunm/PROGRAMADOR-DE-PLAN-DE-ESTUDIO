@@ -220,7 +220,7 @@ class AcademicEngine:
             codigo_a_buscar = codigo
             if codigo in ['1161', '1261', '1361', '1461']: codigo_a_buscar = 'IDIOMA_NIVEL_1'
             elif codigo in ['1162', '1262', '1362', '1462']: codigo_a_buscar = 'IDIOMA_NIVEL_2'
-            elif codigo in ['1163', '1263', '1363', '1463']: codigo_a_buscar = '1163/1263/1363/1463'
+            elif codigo in ['1163', '1263', '1363', '1463']: codigo_a_buscar = '1463'
 
             m_row = self.materias_df[self.materias_df['codigo'] == codigo_a_buscar]
             if m_row.empty: return
