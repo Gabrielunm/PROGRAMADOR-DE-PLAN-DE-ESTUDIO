@@ -169,7 +169,7 @@ else:
                 max_dias = st.slider("Máximo de días con clases por semana", 1, 6, help="No se agendan clases en más días que lo indicado", key="slider_dia")
             
             with col3:
-                max_libres = st.slider("Máximo de materias 'Voy a darla libre' por cuatrimestre", 0, 3, help="Materias que cursarás solo para rendir libre (no ocupan días ni límite de materias)", key="slider_lib")
+                max_libres = st.slider("Máximo de Finales a rendir (Libres/Pendientes) por cuatrimestre", 1, 3, help="Exámenes finales que rendirás en los llamados (materias libres o regulares previas). No te exigen asistir a clases ni ocupan días disponibles.", key="slider_lib")
             
             st.info("✅ Configuración lista. Diríjete a 'Auditoría Actual' o 'Hoja de Ruta Sugerida'")
         

@@ -559,6 +559,10 @@ class AcademicEngine:
                             of_disp = self.oferta_df[self.oferta_df['id_materia'] == id_m_block]
                             if of_disp.empty:
                                 nota_bloqueo = "⚠️ Sin oferta académica en la base de datos."
+                            elif estados_actuales.get(id_m_block) == 'Regular':
+                                nota_bloqueo = f"⚠️ Estás Regular pero el límite de finales por cuatrimestre ({max_libres}) está saturado o en 0. Aumenta el límite de 'Finales a rendir' en Configuración."
+                            elif estados_actuales.get(id_m_block) == 'Voy a darla libre':
+                                nota_bloqueo = f"⚠️ Elegiste darla libre pero el límite de finales por cuatrimestre ({max_libres}) está saturado. Aumenta el límite de 'Finales a rendir' en Configuración."
                             else:
                                 horarios_disp = of_disp['horarios'].unique()
                                 nota_bloqueo = f"💡 Destrábala habilitando tu día para: {' | '.join(horarios_disp)}"
