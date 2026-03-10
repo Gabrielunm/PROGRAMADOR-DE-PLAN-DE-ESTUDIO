@@ -65,7 +65,7 @@ with st.sidebar:
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: 1.2em;">🌐</span>
-                <a href="https://agentia.ar/" target="_blank" style="text-decoration: none; color: #007bff; font-weight: bold;">
+                <a href="https://agentia.ar/nosotros" target="_blank" style="text-decoration: none; color: #007bff; font-weight: bold;">
                     agentia.ar
                 </a>
             </div>
