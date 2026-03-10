@@ -210,6 +210,19 @@ else:
                         col_cod.write(f"**{m['codigo']}**")
                         col_mat.write(m['nombre'])
                         
+                        # Definición de colores para estados
+                        color_map = {
+                            "Aprobado": "#28a745",
+                            "Regular": "#fd7e14",
+                            "Voy a darla libre": "#17a2b8",
+                            "No cursada": "#6c757d",
+                            "Aplazada por Abandono": "#dc3545"
+                        }
+                        color = color_map.get(estado_actual, "#6c757d")
+                        
+                        # Mostrar el selectbox junto con una "píldora" de color
+                        col_est.markdown(f'<div style="background-color: {color}; color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; width: fit-content; margin-bottom: 4px;">{estado_actual.upper()}</div>', unsafe_allow_html=True)
+                        
                         opciones_estado = ["Aprobado", "Regular", "Voy a darla libre", "No cursada", "Aplazada por Abandono"]
                         
                         estado_nuevo = col_est.selectbox(
