@@ -89,7 +89,7 @@ st.info("""
 5. Sube ese archivo aquí abajo.
 """)
 
-st.image("assets/descarga_instruccion.png", caption="Busca el botón de descarga en el menú Plan de Estudios")
+st.image("assets/instruction_excel.png", caption="Busca el botón de descarga en el menú Plan de Estudios")
 
 uploaded_file = st.file_uploader("Sube tu Plan de Estudios (PDF)", type=["pdf"])
 
