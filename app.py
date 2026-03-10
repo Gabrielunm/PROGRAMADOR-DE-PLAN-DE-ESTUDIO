@@ -113,10 +113,8 @@ else:
             st.markdown("### 📊 Tu Progreso")
             st.sidebar.progress(porcentaje / 100)
             
-            c1, c2 = st.sidebar.columns(2)
-            c1.metric("Avance", f"{porcentaje:.1f}%")
-            c2.metric("Aprobadas", f"{aprobadas}/{total_materias}")
-            
+            st.sidebar.metric("Avance", f"{porcentaje:.1f}%")
+            st.sidebar.metric("Aprobadas", f"{aprobadas}/{total_materias}")
             st.sidebar.metric("Finales Pendientes (Regulares)", regulares)
             st.markdown("---")
         
