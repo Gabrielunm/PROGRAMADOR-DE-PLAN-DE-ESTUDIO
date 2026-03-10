@@ -1,0 +1,19 @@
+# Core Dependencies
+pandas>=1.3.0
+streamlit>=1.0.0
+
+# Data Processing & Database
+openpyxl>=3.1.0
+xlrd>=2.0.1
+
+# Optimization
+ortools>=9.0.0
+
+# Testing & Utilities
+requests>=2.26.0
+beautifulsoup4>=4.9.0
+pywin32>=300
+
+
+# Standard library modules (already included with Python):
+# re, json, sqlite3, io, copy, unicodedata, datetime, urllib, sys, subprocess, os, time, typing

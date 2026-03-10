@@ -1,0 +1,167 @@
+[
+  {
+    "codigo": "1011",
+    "nombre": "Instituciones, Organizaciones y Principios de Administración",
+    "correlativas": ""
+  },
+  {
+    "codigo": "1012",
+    "nombre": "Problemas Socioeconómicos Argentinos",
+    "correlativas": ""
+  },
+  {
+    "codigo": "1013",
+    "nombre": "Matemática I",
+    "correlativas": ""
+  },
+  {
+    "codigo": "1014",
+    "nombre": "Economía I",
+    "correlativas": "1012-1013"
+  },
+  {
+    "codigo": "1015",
+    "nombre": "Historia del Pensamiento Social y Político",
+    "correlativas": "1012"
+  },
+  {
+    "codigo": "1016",
+    "nombre": "Contabilidad I",
+    "correlativas": ""
+  },
+  {
+    "codigo": "1021",
+    "nombre": "Economía II",
+    "correlativas": "1014"
+  },
+  {
+    "codigo": "1022",
+    "nombre": "Derecho Constitucional y Administrativo",
+    "correlativas": "1015"
+  },
+  {
+    "codigo": "1023",
+    "nombre": "Derecho Civil y Comercial",
+    "correlativas": "1015"
+  },
+  {
+    "codigo": "1024",
+    "nombre": "Estadística I",
+    "correlativas": "1013"
+  },
+  {
+    "codigo": "1025",
+    "nombre": "Estructura Económica Argentina y Mundial",
+    "correlativas": "1021"
+  },
+  {
+    "codigo": "1026",
+    "nombre": "Derecho Laboral I",
+    "correlativas": "1022"
+  },
+  {
+    "codigo": "1027",
+    "nombre": "Matemática Financiera",
+    "correlativas": "1013"
+  },
+  {
+    "codigo": "1431",
+    "nombre": "Finanzas Públicas y Derecho Tributario",
+    "correlativas": "1022"
+  },
+  {
+    "codigo": "1432",
+    "nombre": "Contabilidad II",
+    "correlativas": "1016"
+  },
+  {
+    "codigo": "1433",
+    "nombre": "Derecho Económico",
+    "correlativas": "1023"
+  },
+  {
+    "codigo": "1434",
+    "nombre": "Estados Contables",
+    "correlativas": "1016"
+  },
+  {
+    "codigo": "1435",
+    "nombre": "Imposición a la Renta y al Patrimonio",
+    "correlativas": "1431"
+  },
+  {
+    "codigo": "1436",
+    "nombre": "Imposición a los Consumos y Sobre. las Trans.",
+    "correlativas": "1431"
+  },
+  {
+    "codigo": "1437",
+    "nombre": "Taller de Liq. de Sueldos y Jornales",
+    "correlativas": "1013-1026"
+  },
+  {
+    "codigo": "1441",
+    "nombre": "Derecho Societario",
+    "correlativas": "1433"
+  },
+  {
+    "codigo": "1442",
+    "nombre": "Sistemas Administrativos",
+    "correlativas": "1011"
+  },
+  {
+    "codigo": "1443",
+    "nombre": "Procedimiento Adm. Tributario y Proceso Penal Tributario",
+    "correlativas": "1435-1436"
+  },
+  {
+    "codigo": "1444",
+    "nombre": "Administración de Personal",
+    "correlativas": "1442"
+  },
+  {
+    "codigo": "1445",
+    "nombre": "Costos",
+    "correlativas": "1013-1432"
+  },
+  {
+    "codigo": "1446",
+    "nombre": "Cont., Adm. y Tribut. de Org. de la Ec. Soc. y Ent.S/ F. de L.",
+    "correlativas": "1441-1443"
+  },
+  {
+    "codigo": "1451",
+    "nombre": "Sistema Público de Administración Financiera y Control",
+    "correlativas": "1431"
+  },
+  {
+    "codigo": "1452",
+    "nombre": "Administración Financiera",
+    "correlativas": "1027"
+  },
+  {
+    "codigo": "1453",
+    "nombre": "Concursos y Quiebras",
+    "correlativas": "1441"
+  },
+  {
+    "codigo": "1454",
+    "nombre": "Auditoría",
+    "correlativas": "1434-1443-1453"
+  },
+  {
+    "codigo": "1455",
+    "nombre": "Actuación Profesional Judicial",
+    "correlativas": "1434-1443-1453"
+  },
+  {
+    "codigo": "1463",
+    "nombre": "Seminario-Taller Optativo",
+    "correlativas": "1432 – 1441 – 1443"
+  },
+  {
+    "codigo": "1464",
+    "nombre": "Taller de Práctica Profesional Supervisada (****)",
+    "correlativas": "(***)"
+  }
+]

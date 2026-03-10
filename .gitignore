@@ -1,0 +1,58 @@
+# Environments
+venv_test/
+.venv/
+env/
+venv/
+ENV/
+bin/
+lib/
+include/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Redundant Files
+redundant_files/
+docs/
+scripts/
+
+# Database
+*.sqlite
+*.db
+
+# Data & Temp
+*.xlsx
+*.xls
+*.csv
+*.html
+*.txt
+!requirements.txt
+!README*.md
+!plan_*.md
+!*.pdf
+!analysis_*.md
+!correlativas_extraidas.txt
+
+# OS
+.DS_Store
+Thumbs.db
