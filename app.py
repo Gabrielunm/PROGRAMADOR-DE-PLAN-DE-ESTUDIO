@@ -40,8 +40,8 @@ def update_profile():
     p = st.session_state.perfil_selector
     if p == "Equilibrado":
         st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 3, 5, 1
-    elif p == "Estándar":
-        st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 3, 4, 1
+    elif p == "Relajado":
+        st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 2, 3, 1
     elif p == "Intensivo":
         st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 5, 6, 1
 
@@ -154,11 +154,11 @@ else:
             
             st.markdown("**1. Elige un perfil rápido:**")
             st.radio("Perfil de Cursada", 
-                     ["Equilibrado", "Estándar", "Intensivo", "Personalizado"], 
+                     ["Relajado", "Equilibrado", "Intensivo", "Personalizado"], 
                      key="perfil_selector", 
                      on_change=update_profile, 
                      horizontal=True,
-                     index=0, # Equilibrado por defecto
+                     index=1, # Equilibrado (índice 1) por defecto
                      label_visibility="collapsed")
             
             st.markdown("<br>**2. Ajuste Fino (Opcional):**", unsafe_allow_html=True)
