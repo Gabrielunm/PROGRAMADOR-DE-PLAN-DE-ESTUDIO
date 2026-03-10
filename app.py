@@ -10,6 +10,7 @@ st.set_page_config(page_title="UNM - Programador Académico", layout="wide", pag
 st.markdown("""
 <style>
     .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #007bff; color: white; }
+    /* No forzamos colores de fondo ni de texto para permitir que el modo oscuro funcione correctamente */
 </style>
 """, unsafe_allow_html=True)
 
@@ -30,12 +31,12 @@ if 'slider_lib' not in st.session_state: st.session_state.slider_lib = 1
 
 def update_profile():
     p = st.session_state.perfil_selector
-    if p == "Estándar (Equilibrado)":
+    if p == "Equilibrado":
         st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 3, 5, 1
-    elif p == "Intensivo (Fast-Track)":
+    elif p == "Estándar":
+        st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 3, 4, 1
+    elif p == "Intensivo":
         st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 5, 6, 1
-    elif p == "Relajado (Trabajador)":
-        st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 2, 3, 1
 
 # --- PANEL PRINCIPAL ---
 st.title("🎓 Programador de Plan de Estudios - Contador Público")
@@ -146,10 +147,11 @@ else:
             
             st.markdown("**1. Elige un perfil rápido:**")
             st.radio("Perfil de Cursada", 
-                     ["Estándar (Equilibrado)", "Intensivo (Fast-Track)", "Relajado (Trabajador)", "Personalizado"], 
+                     ["Equilibrado", "Estándar", "Intensivo", "Personalizado"], 
                      key="perfil_selector", 
                      on_change=update_profile, 
                      horizontal=True,
+                     index=0, # Equilibrado por defecto
                      label_visibility="collapsed")
             
             st.markdown("<br>**2. Ajuste Fino (Opcional):**", unsafe_allow_html=True)
