@@ -36,9 +36,9 @@ def update_profile():
     if p == "Estándar (Equilibrado)":
         st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 3, 5, 1
     elif p == "Intensivo (Fast-Track)":
-        st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 5, 6, 2
+        st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 5, 6, 1
     elif p == "Relajado (Trabajador)":
-        st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 2, 3, 0
+        st.session_state.slider_mat, st.session_state.slider_dia, st.session_state.slider_lib = 2, 3, 1
 
 # --- PANEL PRINCIPAL ---
 st.title("🎓 Programador de Plan de Estudios - Contador Público")
@@ -46,6 +46,8 @@ st.warning("""
 **⚠️ Aviso de Fase Beta / Prototipo:**  
 Esta aplicación es un concepto experimental en etapa de desarrollo. Su propósito es estrictamente de prueba y demostración. Las proyecciones, la evaluación de correlatividades y la disponibilidad de la oferta académica pueden contener imperfecciones, estar desactualizadas o presentar omisiones.  
 *Por favor, verifica siempre de forma fehaciente tu situación académica mediante los canales oficiales y el SIU-Guaraní de la Universidad Nacional de Moreno.*
+
+**🔒 Privacidad de Datos:** Esta aplicación no recopila, almacena ni comparte tu información personal ni tu plan de estudios. Todos los cálculos se realizan de forma temporal durante tu sesión.
 """, icon="🚧")
 
 # Sidebar - Información del Desarrollador
