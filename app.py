@@ -30,6 +30,33 @@ if 'estados_modificados' not in st.session_state:
 # --- PANEL PRINCIPAL ---
 st.title("🎓 Programador de Plan de Estudios - Contador Público")
 
+# Sidebar - Información del Desarrollador
+with st.sidebar:
+    st.markdown("---")
+    st.markdown("### 👨‍💻 Desarrollador")
+    st.markdown(
+        """
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Instagram_logo_2016.svg" width="18" height="18">
+                <a href="https://www.instagram.com/gabriel96h1" target="_blank" style="text-decoration: none; color: #E1306C; font-weight: bold;">
+                    @gabriel96h1
+                </a>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 1.2em;">🌐</span>
+                <a href="https://agentia.ar/" target="_blank" style="text-decoration: none; color: #007bff; font-weight: bold;">
+                    agentia.ar
+                </a>
+            </div>
+        </div>
+        <p style="margin-top: 15px; margin-bottom: 0px; font-weight: bold; font-size: 1.1em;">Gabriel Quiroga</p>
+        <p style="margin-top: 0px; color: #666; font-style: italic;">Agentia Developer</p>
+        """,
+        unsafe_allow_html=True
+    )
+    st.markdown("---")
+
 # Cargar archivo en la parte superior
 st.subheader("1️⃣ Carga tu archivo de plan de estudios")
 
