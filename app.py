@@ -80,18 +80,18 @@ with st.sidebar:
 # Cargar archivo en la parte superior
 st.subheader("1️⃣ Carga tu archivo de plan de estudios")
 
-with st.expander("ℹ️ ¿Cómo descargar mi archivo desde el SIU?", expanded=False):
-    st.markdown("""
-    Sigue estos pasos para obtener tu archivo correctamente:
-    1. Ingresa a **[Gestión Online UNM (SIU-Guaraní)](https://gestiononline.unm.edu.ar/unm3w/)**.
-    2. Inicia sesión con tu usuario y contraseña.
-    3. Dirígete a la sección **Reportes** en el menú superior.
-    4. Selecciona **Plan de Estudio**.
-    5. Haz clic en el botón de **Descarga de PDF** (icono de PDF en la parte superior derecha de la tabla).
-    """)
-    st.image("assets/instruction_excel.png", caption="Referencia: Botones de descarga en el SIU-Guaraní")
+st.info("""
+**📌 Instrucciones:**
+1. Ingresa al SIU Guaraní de la UNM.
+2. Ve a **Reportes > Plan de Estudios**.
+3. Haz clic en el botón **Descargar** (Arriba a la derecha).
+4. Selecciona la opción **PDF** (icono rojo).
+5. Sube ese archivo aquí abajo.
+""")
 
-uploaded_file = st.file_uploader("Subir plan_estudios.pdf", type=["pdf"])
+st.image("assets/descarga_instruccion.png", caption="Busca el botón de descarga en el menú Plan de Estudios")
+
+uploaded_file = st.file_uploader("Sube tu Plan de Estudios (PDF)", type=["pdf"])
 
 if not uploaded_file:
     st.warning("⚠️ Por favor, sube tu archivo `plan_estudios.pdf` extraído del SIU para comenzar.")
@@ -139,14 +139,17 @@ else:
             turnos = ["Mañana", "Tarde", "Noche"]
             
             disponibilidad = {}
-            for dia in dias:
-                with st.expander(f"📅 {dia}"):
+            cols_dias = st.columns(3)
+            for idx, dia in enumerate(dias):
+                with cols_dias[idx % 3]:
+                    st.markdown(f"**📅 {dia}**")
                     selected_turnos = []
                     for t in turnos:
                         is_default = (t in ["Mañana", "Tarde"]) if dia == "SAB" else (t == "Noche")
                         if st.checkbox(t, value=is_default, key=f"{dia}_{t}"):
                             selected_turnos.append(t)
                     disponibilidad[dia] = selected_turnos
+                    st.markdown("---")
             
             st.divider()
             st.subheader("📊 Límites de Proyección")
@@ -188,49 +191,59 @@ else:
                    "📝 _Las materias en 'Voy a darla libre' se excluyen de los límites de materias y días_")
             
             # Mostrar tabla de materias agrupadas por ciclo
-            for ciclo in engine.materias_df['ciclo'].unique():
-                with st.expander(f"📌 {ciclo}", expanded=True):
-                    m_ciclo = engine.materias_df[engine.materias_df['ciclo'] == ciclo]
+            # Agrupar materias por ciclo
+            ciclos = sorted(set(engine.materias_df[engine.materias_df['id_materia'].isin(estados_alumno.keys())]['id_ciclo'].tolist()))
+            ciclo_nombres = {1: "Ciclo Común", 2: "Tecnicatura / Grado Profesional", 3: "Idiomas", 4: "Optativas"}
+            
+            for ciclo_id in ciclos:
+                label = ciclo_nombres.get(ciclo_id, f"Ciclo {ciclo_id}")
+                st.subheader(f"📌 {label}")
+                
+                mats_ciclo = engine.materias_df[
+                    (engine.materias_df['id_ciclo'] == ciclo_id) & 
+                    (engine.materias_df['id_materia'].isin(estados_alumno.keys()))
+                ]
+                
+                for _, m in mats_ciclo.iterrows():
+                    id_m = m['id_materia']
+                    estado_original = estados_alumno.get(id_m, "No cursada") # Use estados_alumno as original for comparison
                     
-                    for _, m in m_ciclo.iterrows():
-                        id_m = m['id_materia']
-                        estado_original = estados_alumno.get(id_m, "No cursada")
-                        
-                        # Usar estado modificado si existe
-                        estado_actual = st.session_state.estados_modificados.get(id_m, estado_original)
-                        
-                        # Crear columnas: código, materia, selector estado
-                        col_cod, col_mat, col_est = st.columns([0.8, 3, 2.5])
-                        
-                        # ===== COLUMNA 1: CÓDIGO =====
-                        col_cod.write(f"**{m['codigo']}**")
-                        
-                        # ===== COLUMNA 2: NOMBRE DE MATERIA =====
-                        col_mat.write(m['nombre'])
-                        
-                        # ===== COLUMNA 3: SELECTOR DE ESTADO =====
-                        opciones_estado = ["Aprobado", "Regular", "Voy a darla libre", "No cursada", "Aplazada por Abandono"]
-                        
-                        estado_nuevo = col_est.selectbox(
-                            "Estado",
-                            options=opciones_estado,
-                            index=opciones_estado.index(estado_actual) if estado_actual in opciones_estado else opciones_estado.index("No cursada"),
-                            key=f"estado_{id_m}",
-                            label_visibility="collapsed"
-                        )
-                        
-                        # Guardar cambio en session_state
-                        if estado_nuevo != estado_original:
-                            st.session_state.estados_modificados[id_m] = estado_nuevo
-                            estado_actual = estado_nuevo
-                        else:
-                            # Si vuelve al original, limpiar del session_state
-                            if id_m in st.session_state.estados_modificados:
-                                del st.session_state.estados_modificados[id_m]
-                            estado_actual = estado_original
-                        
-                        # Actualizar estados_alumno para que se use en la proyección
-                        estados_alumno[id_m] = estado_actual
+                    # Usar estado modificado si existe
+                    estado_actual = st.session_state.estados_modificados.get(id_m, estado_original)
+                    
+                    # Crear columnas: código, materia, selector estado
+                    col_cod, col_mat, col_est = st.columns([0.8, 3, 2.5])
+                    
+                    # ===== COLUMNA 1: CÓDIGO =====
+                    col_cod.write(f"**{m['codigo']}**")
+                    
+                    # ===== COLUMNA 2: NOMBRE DE MATERIA =====
+                    col_mat.write(m['nombre'])
+                    
+                    # ===== COLUMNA 3: SELECTOR DE ESTADO =====
+                    opciones_estado = ["Aprobado", "Regular", "Voy a darla libre", "No cursada", "Aplazada por Abandono"]
+                    
+                    estado_nuevo = col_est.selectbox(
+                        "Estado",
+                        options=opciones_estado,
+                        index=opciones_estado.index(estado_actual) if estado_actual in opciones_estado else opciones_estado.index("No cursada"),
+                        key=f"estado_{id_m}",
+                        label_visibility="collapsed"
+                    )
+                    
+                    # Guardar cambio en session_state
+                    if estado_nuevo != estado_original:
+                        st.session_state.estados_modificados[id_m] = estado_nuevo
+                        estado_actual = estado_nuevo
+                    else:
+                        # Si vuelve al original, limpiar del session_state
+                        if id_m in st.session_state.estados_modificados:
+                            del st.session_state.estados_modificados[id_m]
+                        estado_actual = estado_original
+                    
+                    # Actualizar estados_alumno para que se use en la proyección
+                    estados_alumno[id_m] = estado_actual
+                st.divider()
         
         # ========== TAB: HOJA DE RUTA ==========
         with tab_ruta:
