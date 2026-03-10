@@ -42,6 +42,11 @@ def update_profile():
 
 # --- PANEL PRINCIPAL ---
 st.title("🎓 Programador de Plan de Estudios - Contador Público")
+st.warning("""
+**⚠️ Aviso de Fase Beta / Prototipo:**  
+Esta aplicación es un concepto experimental en etapa de desarrollo. Su propósito es estrictamente de prueba y demostración. Las proyecciones, la evaluación de correlatividades y la disponibilidad de la oferta académica pueden contener imperfecciones, estar desactualizadas o presentar omisiones.  
+*Por favor, verifica siempre de forma fehaciente tu situación académica mediante los canales oficiales y el SIU-Guaraní de la Universidad Nacional de Moreno.*
+""", icon="🚧")
 
 # Sidebar - Información del Desarrollador
 with st.sidebar:
