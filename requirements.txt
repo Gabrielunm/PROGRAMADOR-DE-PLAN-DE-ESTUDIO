@@ -1,20 +1,17 @@
 # Core Dependencies
-pandas>=2.0.0
-streamlit>=1.35.0
-protobuf<5.0.0
+pandas
+streamlit
 
 # Data Processing & Database
-openpyxl>=3.1.0
-xlrd>=2.0.1
+openpyxl
+xlrd
 
 # Optimization
-ortools>=9.0.0
+ortools
 
 # Testing & Utilities
-requests>=2.26.0
-beautifulsoup4>=4.9.0
-
-
+requests
+beautifulsoup4
 
 
 # Standard library modules (already included with Python):
