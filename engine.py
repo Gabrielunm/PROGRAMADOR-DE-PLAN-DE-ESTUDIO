@@ -213,33 +213,40 @@ class AcademicEngine:
             except Exception:
                 pass
 
-        # 3. Intento 3: HTML Encubierto (SIU Guaraní común)
-        # Probamos con varios motores (lxml es el más robusto)
-        try:
-            for enc in ['utf-8', 'latin-1', 'utf-16']:
-                try:
-                    html_str = file_content.decode(enc)
-                    # Forzar lxml si está disponible, sino bs4
-                    dfs = pd.read_html(io.StringIO(html_str), flavor=['lxml', 'html5lib', 'bs4'])
-                    if dfs:
-                        df_merged = pd.concat(dfs, ignore_index=True)
-                        for _, row in df_merged.iterrows():
-                            row_str = ' '.join(str(x) for x in row if pd.notna(x)).strip()
-                            self._parse_row_to_status(row_str, estados_alumno)
-                        break # Si tuvo éxito con un encoding, paramos
-                except Exception:
-                    continue
-        except Exception:
-            pass
+        # 3. Intento 3: HTML Encubierto / Scraping Interno (A prueba de balas)
+        # Probamos con BeautifulSoup para limpiar HTML mal formado antes de que lo lea Pandas.
+        if not estados_alumno:
+            try:
+                from bs4 import BeautifulSoup
+                for enc in ['latin-1', 'utf-8', 'utf-16']:
+                    try:
+                        raw_text = file_content.decode(enc, errors='ignore')
+                        # Solo procedemos si parece haber algo de HTML
+                        if '<table' in raw_text.lower():
+                            # BeautifulSoup ayuda a cerrar etiquetas rotas y limpiar "basura" binaria
+                            soup = BeautifulSoup(raw_text, "lxml") 
+                            dfs = pd.read_html(io.StringIO(str(soup)), flavor=['lxml', 'html5lib', 'bs4'])
+                            if dfs:
+                                for df in dfs:
+                                    if df is not None:
+                                        for _, row in df.iterrows():
+                                            row_str = ' '.join(str(x) for x in row if pd.notna(x)).strip()
+                                            self._parse_row_to_status(row_str, estados_alumno)
+                                if len(estados_alumno) > 5: break
+                    except Exception:
+                        continue
+            except Exception:
+                pass
 
         # 4. Intento 4: Escaneo Binario/Regex Agresivo (Salvavidas para Linux)
-        # Si no recuperamos suficientes materias, usamos fuerza bruta binaria.
-        if len(estados_alumno) < 15: # Umbral de lo esperado en este plan de estudios
+        # Si no recuperamos suficientes materias (umbral de seguridad), usamos fuerza bruta binaria.
+        if len(estados_alumno) < 15: 
             all_text_fallback = ""
+            # latin-1 es el encoding más común para archivos binarios de sistemas viejos en Argentina
             for enc in ['latin-1', 'utf-16le', 'utf-8']:
                 try:
                     raw_text = file_content.decode(enc, errors='ignore')
-                    # No colapsar espacios aún para visualizar la estructura original
+                    # No colapsar espacios aún para visualizar la estructura original del binario
                     clean_text = "".join([c if (c.isalnum() or c in "()/- ,.;") else " " for c in raw_text])
                     all_text_fallback += " [SEP] " + clean_text
                 except Exception:
@@ -247,18 +254,18 @@ class AcademicEngine:
             
             all_text_fallback_up = all_text_fallback.upper()
             
-            # A. Buscar por CÓDIGOS (Contexto muy amplio)
+            # A. Buscar por CÓDIGOS (Contexto muy amplio para archivos dispersos)
             matches_cod = re.finditer(r'\((\d{4})\)|(?<!\d)(\d{4})(?:[/-]\d+)?(?!\d)', all_text_fallback)
             for m in matches_cod:
                 codigo = m.group(1) if m.group(1) else m.group(2)
-                # Ventana de 500 caracteres para atrapar el estado en archivos dispersos
+                # Ventana de 500 caracteres para atrapar el estado incluso en archivos corruptos
                 contexto = all_text_fallback[max(0, m.start()-50):min(len(all_text_fallback), m.start()+450)]
                 self._parse_row_to_status(contexto, estados_alumno)
 
-            # B. Buscar por NOMBRES (Eficaz contra corrupción del código)
+            # B. Buscar por NOMBRES (Eficaz cuando el código está mal guardado)
             for _, row_m in self.materias_df.iterrows():
                 nombre_m = row_m['nombre'].upper()
-                if len(nombre_m) > 12: # Solo nombres distintivos
+                if len(nombre_m) > 12: # Evitar nombres genéricos cortos
                     start_search = 0
                     while True:
                         idx = all_text_fallback_up.find(nombre_m, start_search)
@@ -266,6 +273,7 @@ class AcademicEngine:
                         contexto = all_text_fallback[max(0, idx-20):min(len(all_text_fallback), idx+500)]
                         self._parse_row_to_status(contexto, estados_alumno, id_m_hint=int(row_m['id_materia']))
                         start_search = idx + 1
+
         return estados_alumno, None if estados_alumno else "No se pudo extraer ningún estado. El archivo parece no contener datos académicos válidos o el formato no es soportado."
 
     def _parse_row_to_status(self, row_str, estados_dict, id_m_hint=None):
